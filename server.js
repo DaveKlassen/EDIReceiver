@@ -8,6 +8,7 @@ var application_root = __dirname,
   assert = require('assert'),
   lutils = require('./lib/local_utils'),
   fileStreamRotator = require('file-stream-rotator'),
+  xmlparser = require('express-xml-bodyparser'),
   express = require('express'),
   app = express(),
   bodyParser = require('body-parser'),
@@ -61,6 +62,7 @@ getCurrentEnvironment();
 // Setup the webserver
 app.set('port', EXTERNAL_PORT);
 //app.use('/', express.static(CONFIG.WEB_SERVER_ROOT));
+//app.use(xmlparser({attrkey: "attr$"}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -118,7 +120,20 @@ if (true === WWW_REDIRECT) {
   }
 }
 
-function processPost(receivedReq) {
+
+/* Entry REST handler to verify the URL is up  */
+app.get(CONSTANTS.BASE_URI + '*', function(req, res) {
+  resData = Object.assign({}, req.body);
+  resData.status = CONSTANTS.APPROVED;
+  resData.reason = CONSTANTS.URL_NOT_FOUND;
+  resData.info = "This EndPoint receives JSON POST only data at: /edi/"
+
+  lutils.multiLog("Received request : " + req.url);
+  res.end(JSON.stringify(resData));
+});
+
+
+function processPostData(receivedReq) {
   let response = { status : CONSTANTS.WARNING,
                    reason : CONSTANTS.DEFAULT_WARNING,
                    payload : Object.assign({})
@@ -130,6 +145,7 @@ function processPost(receivedReq) {
     response.reason = CONSTANTS.STILL_PROCESSING;
 
     try {
+
       response.payload = Object.assign({}, receivedReq.body);
       response.payload.id = Date.now();
     } catch (unexpectedError) {
@@ -150,11 +166,10 @@ function processPost(receivedReq) {
   return(response);
 }
 
-/* Entry REST handler to verify the URL is  */
-app.post(CONSTANTS.BASE_URI + '*', function(req, res) {
+function processPostReq(req, res) {
 
   // Process Request
-  let resData = processPost(req)
+  let resData = processPostData(req)
   if (resData.status === CONSTANTS.PROCESSING) {
 
     try {
@@ -177,6 +192,19 @@ app.post(CONSTANTS.BASE_URI + '*', function(req, res) {
     lutils.multiLog(resData.status + " : " + resData.reason);
     res.end(JSON.stringify(resData));
   }
+}
+
+/* Entry XML REST handler to verify the URL is  */
+app.post(CONSTANTS.XML_BASE_URI + '*',
+  xmlparser({attrkey: "attr$", trim: false, explicitArray: false}),
+  function(req, res) {
+
+  processPostReq(req, res);
+});
+
+/* Entry JSON REST handler to verify the URL is  */
+app.post(CONSTANTS.BASE_URI + '*', function(req, res) {
+  processPostReq(req, res);
 });
 
 function saveObject(ediDocument) {
