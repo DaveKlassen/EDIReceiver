@@ -121,18 +121,6 @@ if (true === WWW_REDIRECT) {
 }
 
 
-/* Entry REST handler to verify the URL is up  */
-app.get(CONSTANTS.BASE_URI + '*', function(req, res) {
-  resData = Object.assign({}, req.body);
-  resData.status = CONSTANTS.APPROVED;
-  resData.reason = CONSTANTS.URL_NOT_FOUND;
-  resData.info = "This EndPoint receives JSON POST only data at: /edi/"
-
-  lutils.multiLog("Received request : " + req.url);
-  res.end(JSON.stringify(resData));
-});
-
-
 function processPostData(receivedReq) {
   let response = { status : CONSTANTS.WARNING,
                    reason : CONSTANTS.DEFAULT_WARNING,
@@ -167,6 +155,7 @@ function processPostData(receivedReq) {
 }
 
 function processPostReq(req, res) {
+  lutils.multiLog("Received request : " + req.url);
 
   // Process Request
   let resData = processPostData(req)
@@ -194,12 +183,36 @@ function processPostReq(req, res) {
   }
 }
 
+
+/* Entry REST handler to verify the URL is up  */
+app.get(CONSTANTS.XML_BASE_URI + '*', function(req, res) {
+  resData = Object.assign({}, req.body);
+  resData.status = CONSTANTS.APPROVED;
+  resData.reason = CONSTANTS.URL_NOT_FOUND;
+  resData.info = "This EndPoint receives XML POST only data at: /edi/xml/"
+
+  lutils.multiLog("Received request : " + req.url);
+  res.end(JSON.stringify(resData));
+});
+
 /* Entry XML REST handler to verify the URL is  */
 app.post(CONSTANTS.XML_BASE_URI + '*',
   xmlparser({attrkey: "attr$", trim: false, explicitArray: false}),
   function(req, res) {
 
   processPostReq(req, res);
+});
+
+
+/* Entry REST handler to verify the URL is up  */
+app.get(CONSTANTS.BASE_URI + '*', function(req, res) {
+  resData = Object.assign({}, req.body);
+  resData.status = CONSTANTS.APPROVED;
+  resData.reason = CONSTANTS.URL_NOT_FOUND;
+  resData.info = "This EndPoint receives JSON POST only data at: /edi/"
+
+  lutils.multiLog("Received request : " + req.url);
+  res.end(JSON.stringify(resData));
 });
 
 /* Entry JSON REST handler to verify the URL is  */
