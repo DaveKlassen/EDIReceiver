@@ -1,6 +1,6 @@
 // Use these constants
-const {CONSTANTS} = require('./lib/CONSTANTS');
-const {CONFIG} = require('./lib/CONSTANTS');
+const {CONSTANTS} = require('./lib/Constants');
+const {CONFIG} = require('./lib/Constants');
 
 var application_root = __dirname,
   fs = require('fs'),
