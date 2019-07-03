@@ -18,10 +18,10 @@
     "http": "0.0.0",
     "https": "^1.0",
     "mongodb": "^2.2.26",
-    "morgan": "^1.7.0"
+    "morgan": "^1.9.1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://DaveKlassen4@bitbucket.org/DaveKlassen4/urlcheck.git"
+    "url": "git+https://DaveKlassen@github.com/DaveKlassen/EDIReceiver.git"
   }
 }

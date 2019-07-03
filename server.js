@@ -18,6 +18,7 @@ var application_root = __dirname,
   morgan = require('morgan'),
   MongoClient = require('mongodb').MongoClient,
   events = require('events'),
+  mongo = require('./lib/mongo_api'),
 
   // If you would like to modify these settings create a json_data/server.json file.
   // For an example see the file json_data/envsave.json
@@ -31,11 +32,7 @@ var application_root = __dirname,
   DB_HOST = "",
   DB_USER = "",
   DB_PASS = "",
-
-  DB_IMPL = "mongo",
-  MONGO_HOST_PORT = "mongodb://localhost:27017/",
-  WEB_APP = "edi",
-  WEB_APP_DB = MONGO_HOST_PORT + WEB_APP,
+  DB_IMPL = CONFIG.DB_IMPL,
   OWNER_EMAIL_ADDR = '"Admin" <dbavedb@shaw.ca>';
 
 
@@ -164,7 +161,7 @@ function processPostReq(req, res) {
     try {
 
       // Save Data to DB
-      saveObject(resData.payload);
+      mongo.saveDataObject(resData.payload);
       resData.status = CONSTANTS.SUCCESS;
       resData.reason = CONSTANTS.DOCUMENT_SAVED;
     } catch (unexpectedError) {
@@ -219,51 +216,6 @@ app.get(CONSTANTS.BASE_URI + '*', function(req, res) {
 app.post(CONSTANTS.BASE_URI + '*', function(req, res) {
   processPostReq(req, res);
 });
-
-function saveObject(ediDocument) {
-
-  if ("mongo" === DB_IMPL) {
-
-    // Save the new application to the database
-    MongoClient.connect(WEB_APP_DB, function(err, db) {
-      if (err) {
-        lutils.multiLog("Connect Error - ID# " + ediDocument.id + " : " + err);
-      } else {
-        var collection = db.collection(CONSTANTS.SUBMITTED_EDI_COLLECTION);
-
-        collection.insert(ediDocument, {w:1}, function(err2, result) {
-          if (err2) {
-            lutils.multiLog("Insert Error - ID# " + ediDocument.id  + " : " + err2);
-          } else {
-            lutils.multiLog("New Document: ID# " + ediDocument.id);
-          }
-        });
-      }
-    });
-  } else {
-
-    // Read the answers from file, push this new one, and save the new list back to file.
-    fs.readFile(DOCUMENTS_FILE, function(err, data) {
-      if (err) {
-        lutils.multiLog("File Read Error - ID# " + ediDocument.id  + " : " + err);
-      }
-      // Parse deserialize json to object
-      var submissions = JSON.parse(data);
-
-      // Push the new record onto the list.
-      submissions.push(ediDocument);
-
-      // Save the data backout to file.
-      fs.writeFile(DOCUMENTS_FILE, JSON.stringify(submissions, null, 4), function(err2) {
-        if (err2) {
-          lutils.multiLog("File Write Error - ID# " + ediDocument.id  + " : " + err2);
-        } else {
-          lutils.multiLog("New Application: ID# " + ediDocument.id);
-        }
-      });
-    });
-  }
-}
 
 
 /**
